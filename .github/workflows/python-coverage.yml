@@ -1,0 +1,40 @@
+name: Python Coverage
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov coverage
+
+      - name: Run tests with coverage
+        run: |
+          PYTHONPATH=. pytest --cov=src --cov-report=term-missing --cov-report=xml -vv -ra
+
+      - name: Publish coverage to PR
+        uses: 5monkeys/cobertura-action@v13
+        with:
+          path: coverage.xml
+          minimum_coverage: 90
+          show_missing: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
